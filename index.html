@@ -32,7 +32,7 @@
             font-size: 14px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(78, 205, 196, 0.3);
-            display: none;
+            display: none !important;
         }
         #info-panel h2 {
             margin-bottom: 10px;
@@ -548,6 +548,7 @@
             <button class="control-btn" onclick="toggleWater()">Resfriamento / Água (1)</button>
 
             <button class="control-btn" onclick="toggleHeating()">Ligar Aquecimento  (2)</button>
+            <button class="control-btn" onclick="adjustDimmer()">Ajustar Dimmer (4)</button>
             <!-- <button class="control-btn" onclick="toggleCooling()">Ligar Resfriamento (3)</button> -->
             <button class="control-btn" onclick="resetExperiment()">Resetar (0)</button>
         </div>
@@ -567,6 +568,7 @@
         let isCooling = false;
         let isWaterFlow = false;
         let temperature = 25;
+        let dimmerLevel = 0.5; // Nível do dimmer (0.0 a 1.0)
         let processStage = 0;
         let vaporParticles = [];
         let waterParticles = [];
@@ -579,6 +581,8 @@
         let currentSlide = 0;
         let heatingSlideMode = false; // Modo dos slides de aquecimento
         let currentHeatingSlide = 0;
+        let heaterSlideMode = false; // Modo dos slides da manta aquecedora
+        let currentHeaterSlide = 0;
         let condenserWaterY = 2.3; // Posição Y da água no condensador (ajustável)
         let globalHoseMaterial = null; // Material global das mangueiras
         let dropExitY = 2.3; // Posição Y de saída das gotas (ajustável)
@@ -592,7 +596,7 @@
             {
                 title: "SIMULAÇÃO DE DESTILAÇÃO",
                 description: "Laboratório Virtual Interativo",
-                details: "Bem-vindo ao laboratório virtual de destilação simples!\n\nEsta simulação permite que você experimente o processo \n\ncompleto de separação de líquidos em um ambiente 3D realista.\n\n• ← → Setas: Navegar entre slides\n• ↑ ↓ Setas: Navegar entre slides",
+                details: "Bem-vindo ao laboratório virtual de destilação simples!\n\nEsta simulação demonstra a destilação do etanol do vinho,\n\nseparando o álcool da água através de diferenças de\n\ntemperatura de ebulição em um ambiente 3D realista.",
                 color: 0x4ecdc4
             },
             // {
@@ -622,7 +626,7 @@
             {
                 title: "CONTROLES DA SIMULAÇÃO",
                 description: "Como interagir com o experimento",
-                details: "• Mouse: Olhar ao redor\n• WASD: Mover pela cena\n• Espaço: Pular\n• Shift: Correr\n• Clique nos equipamentos para interagir\n• Observe os balões explicativos!",
+                details: "• Mouse: Olhar ao redor\n• WASD: Mover pela cena\n• Shift: Correr\n• C: Agachar\n• Observe os balões explicativos!",
                 color: 0xffa500
             },
             {
@@ -658,9 +662,41 @@
             {
                 title: "CONDENSAÇÃO E COLETA",
                 description: "Obtenção do etanol puro",
-                details: "• Vapor de etanol resfria no condensador\n• Etanol condensa e vira líquido puro\n• Líquido é coletado no béquer receptor\n• Água permanece no balão original\n• Resultado: etanol separado do vinho\n Pressione tecla 2 para ligar a manta aquecedora",
+                details: "• Vapor de etanol resfria no condensador\n• Etanol condensa e vira líquido puro\n• Líquido é coletado no béquer receptor\n• Água permanece no balão original\n• Resultado: etanol separado do vinho",
                 color: 0x4a90e2,
                 position: { x: -2.3, y: 1.4, z: 0.7 }
+            },
+            {
+                title: "PRONTO PARA COMEÇAR!",
+                description: "Vamos agachar até a manta aquecedora!",
+                details: "Precione C para agachar\n\n Pressione H para continuar",
+                color: 0x00ff00,
+                position: { x: -2.3, y: 1.4, z: 0.7 }
+            }
+        ];
+        
+        // Slides da manta aquecedora (funcionamento detalhado)
+        let heaterSlides = [
+            {
+                title: "MANTA AQUECEDORA",
+                description: "Sistema de aquecimento controlado",
+                details: "A manta aquecedora é o coração do sistema de destilação.\n\nEla aquece gradualmente a mistura líquida no balão,\n\npermitindo a separação dos componentes por diferença\n\nde temperatura de ebulição.",
+                color: 0xff6b6b,
+                position: { x: -2.3, y: 0.87, z: 0.7 }
+            },
+            {
+                title: "CONTROLE DE TEMPERATURA",
+                description: "Monitoramento preciso do processo",
+                details: "O display digital mostra a temperatura em tempo real.\n\nO botão dimmer permite controlar a intensidade\n\ndo aquecimento (20% a 100%).\n\nO LED vermelho indica quando a manta está ativa.",
+                color: 0xffa500,
+                position: { x: -2.3, y: 0.87, z: 0.7 }
+            },
+            {
+                title: "PROCESSO DE AQUECIMENTO",
+                description: "Como funciona a separação",
+                details: "1. Aquece a mistura gradualmente\n2. Etanol vaporiza primeiro (78°C)\n3. Vapor sobe pelo tubo de conexão\n4. Água permanece no balão (100°C)\n\nPressione tecla 2 para ligar a manta!",
+                color: 0x4ecdc4,
+                position: { x: -2.3, y: 0.87, z: 0.7 }
             }
         ];
         
@@ -723,7 +759,7 @@
 
         function startExperience() {
             document.getElementById('instructions').classList.add('hidden');
-            document.getElementById('info-panel').style.display = 'block';
+            document.getElementById('info-panel').style.display = 'none';
             document.getElementById('pointer-hint').style.display = 'block';
             init();
             setupPointerLock();
@@ -1009,7 +1045,7 @@
                     {
                         id: 'preparation',
                         title: 'PREPARAÇÃO',
-                        description: 'Ligue apertando a tecla 1',
+                        description: 'Ligue apertando a tecla 2',
                         position: { x: -2.5, y: 1.5, z: 0.5 },
                         color: 0x4ecdc4,
                         active: true
@@ -1018,7 +1054,7 @@
                         id: 'heating',
                         title: 'AQUECIMENTO',
                         description: 'Aumentando temperatura',
-                        position: { x: -1.6, y: 1.4, z: 0.6 },
+                        position: { x: -2.3, y: 1, z: 0.3 },
                         color: 0xff6b6b,
                         active: false
                     },
@@ -1026,7 +1062,7 @@
                         id: 'vaporization',
                         title: 'VAPORIZAÇÃO',
                         description: 'Líquido vira vapor',
-                        position: { x: -1.6, y: 1.8, z: 0.4 },
+                        position: { x: -1.55, y: 1.1, z: 0.2 },
                         color: 0xffa500,
                         active: false
                     },
@@ -1034,7 +1070,7 @@
                         id: 'condensation',
                         title: 'CONDENSAÇÃO',
                         description: 'Vapor vira líquido',
-                        position: { x: 0, y: 2.1, z: 0.3 },
+                        position: { x: 0, y: 1.35, z: -0.3 },
                         color: 0x4a90e2,
                         active: false
                     },
@@ -1042,7 +1078,7 @@
                         id: 'collection',
                         title: 'COLETA',
                         description: 'Destilado coletado',
-                        position: { x: 1.8, y: 1.3, z: 0.6 },
+                        position: { x: 1.75, y: 1.1, z: 0 },
                         color: 0x00ff00,
                         active: false
                     }
@@ -1169,7 +1205,7 @@
             context.fillStyle = 'rgba(255, 255, 255, 1)';
             context.strokeStyle = 'rgba(0, 0, 0, 1)';
             context.lineWidth = 3;
-            const navText = " Navegar <->" ;
+            const navText = "  ← → Setas: Navegar entre slides " ;
             context.strokeText(navText, centerX, navY);
             context.fillText(navText, centerX, navY);
 
@@ -1328,7 +1364,7 @@
             context.fillStyle = 'rgba(255, 255, 255, 1)';
             context.strokeStyle = 'rgba(0, 0, 0, 1)';
             context.lineWidth = 3;
-            const navText = "← → Navegar | Espaço: Iniciar";
+            const navText = "← Navegar →";
             context.strokeText(navText, centerX, navY);
             context.fillText(navText, centerX, navY);
 
@@ -1372,6 +1408,161 @@
                 canvas: canvas,
                 texture: texture,
                 isHeatingSlide: true
+            };
+
+            window.floatingTextBalloons.push(balloonData);
+        }
+
+        function createHeaterExplanationSlide() {
+            // Usar o slide atual do array heaterSlides
+            const heaterData = heaterSlides[currentHeaterSlide];
+            
+            // Criar canvas para renderizar o texto
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Configurar tamanho do canvas (menor para balão menor)
+            const canvasSize = 800;
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+
+            // Configurar fonte (menor para balão menor)
+            const titleFontSize = 36;
+            const descFontSize = 22;
+            const detailsFontSize = 16;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // Desenhar fundo do balão (transparente)
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const balloonRadius = 300; // Menor que o balão normal
+
+            // Borda do balão mais espessa e colorida
+            const borderColor = `#${heaterData.color.toString(16).padStart(6, '0')}`;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 12;
+            context.beginPath();
+            context.arc(centerX, centerY, balloonRadius, 0, Math.PI * 2);
+            context.stroke();
+
+            // Sombra externa para destaque
+            context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            context.shadowBlur = 12;
+            context.shadowOffsetX = 6;
+            context.shadowOffsetY = 6;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 12;
+            context.stroke();
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+
+            // Desenhar título com efeito de brilho
+            context.font = `bold ${titleFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 6;
+
+            const titleY = centerY - 90;
+            context.strokeText(heaterData.title, centerX, titleY);
+            context.fillText(heaterData.title, centerX, titleY);
+
+            // Efeito de brilho no texto
+            context.shadowColor = borderColor;
+            context.shadowBlur = 15;
+            context.fillStyle = borderColor;
+            context.fillText(heaterData.title, centerX, titleY);
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+
+            // Desenhar descrição
+            context.font = `bold ${descFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 4;
+
+            const descY = centerY - 45;
+            context.strokeText(heaterData.description, centerX, descY);
+            context.fillText(heaterData.description, centerX, descY);
+
+            // Desenhar detalhes (quebrar em linhas)
+            context.font = `bold ${detailsFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 2;
+
+            const detailsLines = heaterData.details.split('\n');
+            const lineHeight = 20;
+            const startY = centerY + 15;
+
+            detailsLines.forEach((line, index) => {
+                const y = startY + (index * lineHeight);
+                context.strokeText(line, centerX, y);
+                context.fillText(line, centerX, y);
+            });
+
+            // Indicador de slide atual
+            const indicatorY = centerY + 150;
+            context.font = `bold 18px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 3;
+            const slideText = `${currentHeaterSlide + 1} / ${heaterSlides.length}`;
+            context.strokeText(slideText, centerX, indicatorY);
+            context.fillText(slideText, centerX, indicatorY);
+
+            // Instruções de navegação
+            const navY = centerY + 180;
+            context.font = `bold 16px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 2;
+            const navText = "← Navegar →";
+            context.strokeText(navText, centerX, navY);
+            context.fillText(navText, centerX, navY);
+
+            // Criar textura do canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            // Criar material com a textura
+            const textMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            // Criar geometria do plano (menor)
+            const textGeometry = new THREE.PlaneGeometry(1.2, 1.2);
+
+            // Criar mesh do texto
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(heaterData.position.x, heaterData.position.y, heaterData.position.z);
+
+            // Sempre olhar para a câmera
+            textMesh.lookAt(camera.position);
+
+            // Criar grupo para o balão completo (sem esfera de fundo)
+            const balloonGroup = new THREE.Group();
+            balloonGroup.add(textMesh);
+            balloonGroup.visible = textBalloonsVisible; // Respeitar configuração de visibilidade
+
+            // Adicionar à cena
+            scene.add(balloonGroup);
+
+            // Armazenar referência para animação
+            const balloonData = {
+                group: balloonGroup,
+                text: textMesh,
+                balloon: null, // Sem esfera de fundo
+                originalY: heaterData.position.y,
+                index: 0,
+                canvas: canvas,
+                texture: texture,
+                isHeaterSlide: true
             };
 
             window.floatingTextBalloons.push(balloonData);
@@ -1702,7 +1893,15 @@
                 context.fillStyle = 'rgba(255, 255, 255, 1)';
                 context.strokeStyle = 'rgba(0, 0, 0, 1)';
                 context.lineWidth = 4;
-                const progressText = `${Math.round(progress * 100)}%`;
+                
+                // Para o estágio de coleta, mostrar volume em mL ao invés de %
+                let progressText;
+                if (stageData.id === 'collection') {
+                    progressText = `${Math.round(volumeCollected)} mL`;
+                } else {
+                    progressText = `${Math.round(progress * 100)}%`;
+                }
+                
                 context.strokeText(progressText, centerX, progressBarY + 50);
                 context.fillText(progressText, centerX, progressBarY + 50);
             }
@@ -2252,7 +2451,10 @@
                 roughness: 0.1,
                 metalness: 0.0,
                 transmission: 0.3,
-                thickness: 0.1
+                thickness: 0.1,
+                depthWrite: false, // NÃO escrever no depth buffer para evitar culling
+                depthTest: false, // NÃO testar profundidade para evitar culling
+                side: THREE.DoubleSide // Renderizar ambos os lados
             });
             const hoseMaterial = globalHoseMaterial;
             
@@ -2266,6 +2468,8 @@
                 new THREE.TubeGeometry(hose1Curve, 20, 0.03, 8),
                 hoseMaterial
             );
+            hose1.frustumCulled = false; // Desabilitar culling para mangueira de entrada
+            hose1.renderOrder = -1; // Renderizar antes dos condensadores
             scene.add(hose1);
             distillationSetup.inletHose = hose1;
 
@@ -2279,8 +2483,13 @@
                 new THREE.TubeGeometry(hose2Curve, 20, 0.03, 8),
                 hoseMaterial
             );
+            hose2.frustumCulled = false; // Desabilitar culling para mangueira de saída
+            hose2.renderOrder = -1; // Renderizar antes dos condensadores
             scene.add(hose2);
             distillationSetup.outletHose = hose2;
+            
+            // Garantir que ambas as mangueiras usem exatamente o mesmo material
+            distillationSetup.inletHose.material = distillationSetup.outletHose.material;
 
             // Adicionar detalhes das mangueiras (conexões e grampos)
             createHoseDetails();
@@ -2427,6 +2636,30 @@
 
             // Texto do display (será atualizado dinamicamente)
             distillationSetup.heaterDisplayText = null; // Será criado dinamicamente
+
+            // Botão dimmer abaixo do display (mesmo formato retangular)
+            const dimmerGeometry = new THREE.CylinderGeometry(0.03, 0.03, 0.03);
+            const dimmerMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0x333333,
+                metalness: 0.8,
+                roughness: 0.2
+            });
+            distillationSetup.dimmerButton = new THREE.Mesh(dimmerGeometry, dimmerMaterial);
+            distillationSetup.dimmerButton.position.set(-1.65, 1.25, 0.54); // Abaixo do display
+            distillationSetup.dimmerButton.rotation.x = Math.PI / 2; // Rotacionar para ficar virado para o player
+            distillationSetup.dimmerButton.castShadow = true;
+            scene.add(distillationSetup.dimmerButton);
+
+            // LED vermelho ao lado esquerdo do dimmer
+            const ledGeometry = new THREE.SphereGeometry(0.02, 16, 16);
+            const ledMaterial = new THREE.MeshStandardMaterial({ 
+                color: 0xff0000,
+                emissive: 0xff0000,
+                emissiveIntensity: 0.3
+            });
+            distillationSetup.redLED = new THREE.Mesh(ledGeometry, ledMaterial);
+            distillationSetup.redLED.position.set(-1.55, 1.25, 0.54); // Lado esquerdo do dimmer
+            scene.add(distillationSetup.redLED);
 
             // 7. SUPORTES UNIVERSAIS - ajustados para nova configuração
             createUniversalSupport(-1.6, 1.05, -0.6); // Suporte do balão
@@ -3092,6 +3325,9 @@
             } else if (heatingSlideMode && currentHeatingSlide < heatingSlides.length - 1) {
                 currentHeatingSlide++;
                 updateHeatingSlide();
+            } else if (heaterSlideMode && currentHeaterSlide < heaterSlides.length - 1) {
+                currentHeaterSlide++;
+                updateHeaterSlide();
             }
         }
 
@@ -3102,6 +3338,9 @@
             } else if (heatingSlideMode && currentHeatingSlide > 0) {
                 currentHeatingSlide--;
                 updateHeatingSlide();
+            } else if (heaterSlideMode && currentHeaterSlide > 0) {
+                currentHeaterSlide--;
+                updateHeaterSlide();
             }
         }
 
@@ -3161,10 +3400,23 @@
             createHeatingExplanationSlide();
         }
 
+        function updateHeaterSlide() {
+            // Remover balão atual
+            window.floatingTextBalloons.forEach(balloon => {
+                if (balloon.isHeaterSlide) {
+                    scene.remove(balloon.group);
+                }
+            });
+            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeaterSlide);
+            
+            // Criar novo balão com slide atual
+            createHeaterExplanationSlide();
+        }
+
         function setupKeyboardControls() {
             document.addEventListener('keydown', (e) => {
-                // Controles de apresentação e slides de aquecimento
-                if (presentationMode || heatingSlideMode) {
+                // Controles de apresentação, slides de aquecimento e slides da manta aquecedora
+                if (presentationMode || heatingSlideMode || heaterSlideMode) {
                     switch(e.code) {
                         case 'ArrowRight':
                         case 'ArrowDown':
@@ -3211,6 +3463,9 @@
                     case 'Digit3': 
                         toggleCooling(); 
                         break;
+                    case 'Digit4': 
+                        adjustDimmer(); 
+                        break;
                     case 'Digit0': 
                         resetExperiment(); 
                         break;
@@ -3224,7 +3479,38 @@
                         toggleAdditionalEquipment(); 
                         break;
                     case 'KeyH': 
-                        toggleInfoPanel(); 
+                        if (heaterSlideMode) {
+                            // Se já está no modo de slides da manta, voltar ao experimento
+                            heaterSlideMode = false;
+                            currentHeaterSlide = 0;
+                            
+                            // Limpar balões da manta aquecedora
+                            window.floatingTextBalloons.forEach(balloon => {
+                                if (balloon.isHeaterSlide) {
+                                    scene.remove(balloon.group);
+                                }
+                            });
+                            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeaterSlide);
+                            
+                            document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora desativados (H para ativar)';
+                        } else {
+                            // Ativar slides da manta aquecedora
+                            heaterSlideMode = true;
+                            currentHeaterSlide = 0;
+                            
+                            // Limpar outros balões se existirem
+                            window.floatingTextBalloons.forEach(balloon => {
+                                if (balloon.isPresentation || balloon.isHeatingSlide) {
+                                    scene.remove(balloon.group);
+                                }
+                            });
+                            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isPresentation && !b.isHeatingSlide);
+                            
+                            // Criar primeiro slide da manta aquecedora
+                            createHeaterExplanationSlide();
+                            
+                            document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora ativados (H para desativar)';
+                        }
                         break;
                     case 'KeyL': 
                         toggleTextBalloons(); 
@@ -3267,6 +3553,26 @@
                 heaterShutdownProgress = 0;
                 heaterTransitionProgress = 1;
                 document.getElementById('process-status').textContent = 'Status: Desaquecendo...';
+            }
+        }
+
+        function adjustDimmer() {
+            // Ajustar nível do dimmer (0.0 a 1.0)
+            dimmerLevel = (dimmerLevel + 0.2) % 1.0;
+            if (dimmerLevel === 0) dimmerLevel = 0.2; // Mínimo de 20%
+            
+            // Atualizar status
+            const percentage = Math.round(dimmerLevel * 100);
+            document.getElementById('process-status').textContent = `Status: Dimmer ajustado para ${percentage}%`;
+            
+            // Efeito visual no botão dimmer
+            if (distillationSetup.dimmerButton) {
+                const dimmerColor = new THREE.Color().lerpColors(
+                    new THREE.Color(0x333333), // Cinza escuro
+                    new THREE.Color(0x666666), // Cinza claro
+                    dimmerLevel
+                );
+                distillationSetup.dimmerButton.material.color.copy(dimmerColor);
             }
         }
 
@@ -3736,13 +4042,17 @@
                 new THREE.Vector3(0.8, yPosition, -0.18)  // Entrada na camisa externa do condensador (posição Y ajustada)
             );
             
-            // Usar o material global das mangueiras (mesmo da mangueira de saída)
-            const hoseMaterial = globalHoseMaterial;
+            // Garantir que a mangueira de entrada use exatamente o mesmo material da mangueira de saída
+            const hoseMaterial = distillationSetup.outletHose ? 
+                distillationSetup.outletHose.material : 
+                globalHoseMaterial;
             
             const newHose = new THREE.Mesh(
                 new THREE.TubeGeometry(hose1Curve, 20, 0.03, 8),
                 hoseMaterial
             );
+            newHose.frustumCulled = false; // Desabilitar culling para mangueira de entrada
+            newHose.renderOrder = -1; // Renderizar antes dos condensadores
             scene.add(newHose);
             distillationSetup.inletHose = newHose;
         }
@@ -4040,9 +4350,9 @@
         }
 
         function updateExperiment() {
-            // Aquecimento gradual
+            // Aquecimento gradual (controlado pelo dimmer)
             if (isHeating && temperature < 120) {
-                temperature += 0.075; // Reduzido pela metade para demorar o dobro do temporrr
+                temperature += 0.075 * dimmerLevel; // Velocidade de aquecimento controlada pelo dimmer
                 
                 // Atualizar coluna de mercúrio do termômetro - sobe conforme a temperatura
                 // 25°C = altura base (já ocupa os 25°C), 120°C = máximo visível no termômetro
@@ -4315,6 +4625,21 @@
             // Atualizar display da manta aquecedora
             updateHeaterDisplay();
 
+            // Animação do LED vermelho
+            if (distillationSetup.redLED) {
+                if (isHeating && heaterTransitionProgress > 0.1) {
+                    // LED pisca quando a manta está ligada
+                    const time = Date.now() * 0.008;
+                    const blinkIntensity = 0.3 + Math.sin(time) * 0.2;
+                    distillationSetup.redLED.material.emissiveIntensity = blinkIntensity;
+                    distillationSetup.redLED.material.emissive.setHex(0xff0000);
+                } else {
+                    // LED apagado quando a manta está desligada
+                    distillationSetup.redLED.material.emissiveIntensity = 0.05;
+                    distillationSetup.redLED.material.emissive.setHex(0x330000);
+                }
+            }
+
             // Sistema de líquido coletado - preenchimento dinâmico
             if (volumeCollected > 0) {
                 // Calcular proporção de enchimento baseada no volume coletado
@@ -4529,7 +4854,7 @@
                             particle.material.color.setHex(0xc9ddf4);
                             
                             // Efeito de rotação circular na camisa externa (jacket)
-                            const radius = 0.15; // Raio da camisa externa
+                            const radius = 0.12; // Raio reduzido para não sair do jacket
                             const angle = userData.progress * Math.PI * 2; // Rotação completa
                             particle.position.z = Math.sin(angle) * radius;
                             particle.position.y = condenserWaterY + Math.cos(angle) * 0.05; // Pequena variação vertical
