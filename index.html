@@ -357,8 +357,8 @@
 <body>
     <div id="instructions">
         <button class="bottom-back-btn" onclick="hideContent()">← Voltar</button>
-        <h1>🧪 Laboratório de Destilação Fracionada</h1>
-        <p>Simulação interativa de destilação fracionada com equipamentos de laboratório realistas.</p>
+        <h1>🧪 Laboratório de Destilação simples</h1>
+        <p>Simulação interativa de destilação simples com equipamentos de laboratório realistas.</p>
         
         <div class="menu-buttons">
             <button class="menu-btn" onclick="startExperience()">🚀 Iniciar</button>
@@ -394,7 +394,6 @@
             <p><strong>Equipamentos Principais:</strong></p>
             <ul>
                 <li><strong>Balão de Destilação</strong> - Contém a mistura líquida</li>
-                <li><strong>Coluna de Fracionamento</strong> - Separa os componentes por ponto de ebulição</li>
                 <li><strong>Condensador</strong> - Resfria o vapor para líquido</li>
                 <li><strong>Manta de Aquecimento</strong> - Aquece o balão</li>
                 <li><strong>Recipiente Coletor</strong> - Coleta o destilado</li>
@@ -411,7 +410,6 @@
             <ul>
                 <li>1. Aquece a mistura líquida no balão</li>
                 <li>2. Vaporiza os componentes com diferentes pontos de ebulição</li>
-                <li>3. Separa na coluna de fracionamento</li>
                 <li>4. Condensa o vapor no condensador</li>
                 <li>5. Coleta o destilado no recipiente</li>
             </ul>
@@ -530,13 +528,12 @@
     <div id="pointer-hint">Clique para capturar o mouse e olhar ao redor</div>
 
     <div id="info-panel">
-        <h2>Destilação Fracionada</h2>
+        <h2>Destilação Simples</h2>
         <p>Sistema completo para separação de misturas líquidas.</p>
         
         <div class="equipment-list">
             <strong>Vidrarias presentes:</strong><br>
             ✓ Balão de fundo redondo<br>
-            ✓ Coluna de fracionamento<br>
             ✓ Termômetro<br>
             ✓ Condensador Liebig<br>
             ✓ Alonga/Adaptador<br>
@@ -576,6 +573,97 @@
         let condensationDrops = [];
         let bubbleParticles = []; // Partículas de bolhas no líquido
         let volumeCollected = 0;
+        
+        // Sistema de apresentação didática
+        let presentationMode = true; // Inicia em modo apresentação
+        let currentSlide = 0;
+        let heatingSlideMode = false; // Modo dos slides de aquecimento
+        let currentHeatingSlide = 0;
+        let condenserWaterY = 2.3; // Posição Y da água no condensador (ajustável)
+        let globalHoseMaterial = null; // Material global das mangueiras
+        let dropExitY = 2.3; // Posição Y de saída das gotas (ajustável)
+        let vaporCondenserY = 2.3; // Posição Y do vapor no condensador (ajustável)
+        let alongaStartY = 2.3; // Posição Y inicial da alonga (ajustável)
+        let alongaEndY = 1.8; // Posição Y final da alonga (ajustável)
+        let vaporCondenserInclination = 0; // Inclinação do vapor dentro do condensador (ajustável)
+        let condenserEndX = 0.9; // Posição X de saída do condensador (ajustável)
+        let textBalloonsVisible = true; // Controle de visibilidade dos balões de texto
+        let presentationSlides = [
+            {
+                title: "SIMULAÇÃO DE DESTILAÇÃO",
+                description: "Laboratório Virtual Interativo",
+                details: "Bem-vindo ao laboratório virtual de destilação simples!\n\nEsta simulação permite que você experimente o processo \n\ncompleto de separação de líquidos em um ambiente 3D realista.\n\n• ← → Setas: Navegar entre slides\n• ↑ ↓ Setas: Navegar entre slides",
+                color: 0x4ecdc4
+            },
+            // {
+            //     title: "SIMULAÇÃO DE DESTILAÇÃO",
+            //     description: "Laboratório Virtual Interativo",
+            //     details: "• ← → Setas: Navegar slides\n• ↑ ↓ Setas: Navegar slides\n• Espaço: Iniciar experimento\n• R: Resetar experimento\n\nPressione ESPAÇO para começar!",
+            //     color: 0x4ecdc4
+            // },
+            {
+                title: "O QUE É DESTILAÇÃO?",
+                description: "Separação de líquidos por diferença de volatilidade",
+                details: "A destilação é um processo que separa líquidos \n\nbaseado em suas diferentes temperaturas de ebulição.\n\n• Mistura de etanol e água\n• Etanol: ponto de ebulição 78°C\n• Água: ponto de ebulição 100°C\n• O etanol vaporiza primeiro!",
+                color: 0x4ecdc4
+            },
+            {
+                title: "EQUIPAMENTOS E VIDRARIAS ",
+                description: "Configuração completa para destilação",
+                details: "• Balão de destilação (mistura inicial)\n• Condensador (resfriamento)\n• Balão coletor (destilado)\n• Termômetro (controle de temperatura)\n• Fonte de calor (aquecimento)",
+                color: 0x4ecdc4
+            },
+            {
+                title: "PROCESSO PASSO A PASSO",
+                description: "Como funciona a destilação",
+                details: "1. AQUECIMENTO: Temperatura sobe gradualmente\n2. VAPORIZAÇÃO: Etanol vaporiza primeiro (78°C)\n3. CONDENSAÇÃO: Vapor resfria e vira líquido\n4. COLETA: Destilado puro é coletado\n5. SEPARAÇÃO: Água permanece no balão original",
+                color: 0xff6b6b
+            },
+            {
+                title: "CONTROLES DA SIMULAÇÃO",
+                description: "Como interagir com o experimento",
+                details: "• Mouse: Olhar ao redor\n• WASD: Mover pela cena\n• Espaço: Pular\n• Shift: Correr\n• Clique nos equipamentos para interagir\n• Observe os balões explicativos!",
+                color: 0xffa500
+            },
+            {
+                title: "BALÕES EXPLICATIVOS",
+                description: "Sistema de ajuda visual",
+                details: "Durante o experimento, você verá balões flutuantes que explicam:\n\n• O que está acontecendo em cada etapa\n• Por que acontece (conceitos químicos)\n• Progresso do processo\n• Instruções de controle",
+                color: 0x4a90e2
+            },
+            {
+                title: "PRONTO PARA COMEÇAR!",
+                description: "Inicie sua experiência de aprendizado",
+                details: "\n\nPressione ESPAÇO para começar!",
+                color: 0x00ff00
+            }
+        ];
+        
+        // Slides explicativos sobre aquecimento e separação do etanol
+        let heatingSlides = [
+            {
+                title: "AQUECIMENTO DE LÍQUIDOS",
+                description: "Uso correto da manta aquecedora",
+                details: "• MANTA AQUECEDORA é ideal para balões volumétricos redondos\n• Distribui calor uniformemente por toda a superfície\n• Evita pontos quentes que podem quebrar o vidro\n• Aquece gradualmente sem choque térmico\n• Mantém temperatura constante durante o processo\n• Pressione tecla 1 para ligar a manta aquecedora",
+                color: 0xff6b6b,
+                position: { x: -2.3, y: 1.4, z: 0.7 }
+            },
+            {
+                title: "SEPARAÇÃO DO ETANOL",
+                description: "Processo de destilação do vinho",
+                details: "• VINHO contém etanol (álcool) e água\n• Etanol: ponto de ebulição 78°C\n• Água: ponto de ebulição 100°C\n• Etanol vaporiza primeiro (mais volátil)\n• Separação baseada na diferença de volatilidade",
+                color: 0xffa500,
+                position: { x: -2.3, y: 1.4, z: 0.7 }
+            },
+            {
+                title: "CONDENSAÇÃO E COLETA",
+                description: "Obtenção do etanol puro",
+                details: "• Vapor de etanol resfria no condensador\n• Água fria circula na camisa externa\n• Etanol condensa e vira líquido puro\n• Líquido é coletado no balão receptor\n• Água permanece no balão original\n• Resultado: etanol separado do vinho",
+                color: 0x4a90e2,
+                position: { x: -2.3, y: 1.4, z: 0.7 }
+            }
+        ];
+        
         let condenserWaterLevel = 0; // Nível de água no condensador (0-1)
         let condenserFilling = false; // Se o condensador está enchendo
         let condenserWaterMesh = null; // Mesh da água dentro do condensador
@@ -679,7 +767,7 @@
 
             // Câmera com FOV maior para melhor visão e renderização completa
             camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 2000);
-            camera.position.set(0, 3, 6);
+            camera.position.set(0, 3, 1.6);
 
              // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -906,6 +994,721 @@
             drawerHandle.position.set(0, 0.8, -2.7);
             drawerHandle.rotation.z = Math.PI / 2;
             scene.add(drawerHandle);
+
+            // Criar balões de texto flutuantes sobre a mesa
+            createFloatingTextBalloons();
+        }
+
+        function createFloatingTextBalloons() {
+            // Array para armazenar os balões de texto dinâmicos
+            window.floatingTextBalloons = [];
+            window.processBalloons = {
+                currentStage: 0,
+                activeBalloons: [],
+                stageData: [
+                    {
+                        id: 'preparation',
+                        title: 'PREPARAÇÃO',
+                        description: 'Ligue apertando a tecla 1',
+                        position: { x: -2.5, y: 1.5, z: 0.5 },
+                        color: 0x4ecdc4,
+                        active: true
+                    },
+                    {
+                        id: 'heating',
+                        title: 'AQUECIMENTO',
+                        description: 'Aumentando temperatura',
+                        position: { x: -1.6, y: 1.4, z: 0.6 },
+                        color: 0xff6b6b,
+                        active: false
+                    },
+                    {
+                        id: 'vaporization',
+                        title: 'VAPORIZAÇÃO',
+                        description: 'Líquido vira vapor',
+                        position: { x: -1.6, y: 1.8, z: 0.4 },
+                        color: 0xffa500,
+                        active: false
+                    },
+                    {
+                        id: 'condensation',
+                        title: 'CONDENSAÇÃO',
+                        description: 'Vapor vira líquido',
+                        position: { x: 0, y: 2.1, z: 0.3 },
+                        color: 0x4a90e2,
+                        active: false
+                    },
+                    {
+                        id: 'collection',
+                        title: 'COLETA',
+                        description: 'Destilado coletado',
+                        position: { x: 1.8, y: 1.3, z: 0.6 },
+                        color: 0x00ff00,
+                        active: false
+                    }
+                ]
+            };
+
+            // Se estiver em modo apresentação, criar balão de apresentação
+            if (presentationMode) {
+                createPresentationBalloon();
+            } else if (heatingSlideMode) {
+                // Criar slide explicativo sobre aquecimento
+                createHeatingExplanationSlide();
+            } else {
+                // Criar balões do processo
+                createProcessBalloon(window.processBalloons.stageData[0], 0);
+            }
+        }
+
+        function createPresentationBalloon() {
+            const slide = presentationSlides[currentSlide];
+            
+            // Criar canvas para renderizar o texto
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Configurar tamanho do canvas (otimizado)
+            const canvasSize = 1024; // Maior para mais detalhes
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+
+            // Configurar fonte
+            const titleFontSize = 48;
+            const descFontSize = 28;
+            const detailsFontSize = 20;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // Desenhar fundo do balão (transparente)
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const balloonRadius = 400;
+
+            // Fundo transparente - apenas borda
+            // Não desenhar preenchimento, apenas borda
+
+            // Borda do balão mais espessa e colorida
+            const borderColor = `#${slide.color.toString(16).padStart(6, '0')}`;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 16;
+            context.beginPath();
+            context.arc(centerX, centerY, balloonRadius, 0, Math.PI * 2);
+            context.stroke();
+
+            // Sombra externa para destaque
+            context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            context.shadowBlur = 15;
+            context.shadowOffsetX = 8;
+            context.shadowOffsetY = 8;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 16;
+            context.stroke();
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+
+            // Desenhar título com efeito de brilho
+            context.font = `bold ${titleFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 8;
+
+            const titleY = centerY - 120;
+            context.strokeText(slide.title, centerX, titleY);
+            context.fillText(slide.title, centerX, titleY);
+
+            // Efeito de brilho no texto
+            context.shadowColor = borderColor;
+            context.shadowBlur = 20;
+            context.fillStyle = borderColor;
+            context.fillText(slide.title, centerX, titleY);
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+
+            // Desenhar descrição
+            context.font = `bold ${descFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 5;
+
+            const descY = centerY - 60;
+            context.strokeText(slide.description, centerX, descY);
+            context.fillText(slide.description, centerX, descY);
+
+            // Desenhar detalhes (quebrar em linhas)
+            context.font = `bold ${detailsFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 3;
+
+            const detailsLines = slide.details.split('\n');
+            const lineHeight = 25;
+            const startY = centerY + 20;
+
+            detailsLines.forEach((line, index) => {
+                const y = startY + (index * lineHeight);
+                context.strokeText(line, centerX, y);
+                context.fillText(line, centerX, y);
+            });
+
+            // Indicador de slide atual
+            const indicatorY = centerY + 300;
+            context.font = `bold 28px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 4;
+            const slideText = `${currentSlide + 1} / ${presentationSlides.length}`;
+            context.strokeText(slideText, centerX, indicatorY);
+            context.fillText(slideText, centerX, indicatorY);
+
+            // Instruções de navegação
+            const navY = centerY + 250;
+            context.font = `bold 22px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 3;
+            const navText = " Navegar <->" ;
+            context.strokeText(navText, centerX, navY);
+            context.fillText(navText, centerX, navY);
+
+            // Criar textura do canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            // Criar material com a textura
+            const textMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            // Criar geometria do plano (maior para apresentação)
+            const textGeometry = new THREE.PlaneGeometry(1.5, 1.5);
+
+            // Criar mesh do texto
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(0, 1.4, 1); // Posição mais baixa
+
+            // Sempre olhar para a câmera
+            textMesh.lookAt(camera.position);
+
+            // Criar grupo para o balão completo (sem esfera de fundo)
+            const balloonGroup = new THREE.Group();
+            balloonGroup.add(textMesh);
+            balloonGroup.visible = textBalloonsVisible; // Respeitar configuração de visibilidade
+
+            // Adicionar à cena
+            scene.add(balloonGroup);
+
+            // Armazenar referência para animação
+            const balloonData = {
+                group: balloonGroup,
+                text: textMesh,
+                balloon: null, // Sem esfera de fundo
+                originalY: 1.6,
+                index: 0,
+                canvas: canvas,
+                texture: texture,
+                slide: slide,
+                isPresentation: true
+            };
+
+            window.floatingTextBalloons.push(balloonData);
+        }
+
+        function createHeatingExplanationSlide() {
+            // Usar o slide atual do array heatingSlides
+            const heatingData = heatingSlides[currentHeatingSlide];
+            
+            // Criar canvas para renderizar o texto
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+
+            // Configurar tamanho do canvas
+            const canvasSize = 1024;
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+
+            // Configurar fonte
+            const titleFontSize = 48;
+            const descFontSize = 28;
+            const detailsFontSize = 20;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+
+            // Desenhar fundo do balão (transparente)
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const balloonRadius = 400;
+
+            // Fundo transparente - apenas borda
+            // Não desenhar preenchimento, apenas borda
+
+            // Borda do balão mais espessa e colorida
+            const borderColor = `#${heatingData.color.toString(16).padStart(6, '0')}`;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 16;
+            context.beginPath();
+            context.arc(centerX, centerY, balloonRadius, 0, Math.PI * 2);
+            context.stroke();
+
+            // Sombra externa para destaque
+            context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+            context.shadowBlur = 15;
+            context.shadowOffsetX = 8;
+            context.shadowOffsetY = 8;
+            context.strokeStyle = borderColor;
+            context.lineWidth = 16;
+            context.stroke();
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+            context.shadowOffsetX = 0;
+            context.shadowOffsetY = 0;
+
+            // Desenhar título com efeito de brilho
+            context.font = `bold ${titleFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 8;
+
+            const titleY = centerY - 120;
+            context.strokeText(heatingData.title, centerX, titleY);
+            context.fillText(heatingData.title, centerX, titleY);
+
+            // Efeito de brilho no texto
+            context.shadowColor = borderColor;
+            context.shadowBlur = 20;
+            context.fillStyle = borderColor;
+            context.fillText(heatingData.title, centerX, titleY);
+            context.shadowColor = 'transparent';
+            context.shadowBlur = 0;
+
+            // Desenhar descrição
+            context.font = `bold ${descFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 5;
+
+            const descY = centerY - 60;
+            context.strokeText(heatingData.description, centerX, descY);
+            context.fillText(heatingData.description, centerX, descY);
+
+            // Desenhar detalhes (quebrar em linhas)
+            context.font = `bold ${detailsFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 3;
+
+            const detailsLines = heatingData.details.split('\n');
+            const lineHeight = 25;
+            const startY = centerY + 20;
+
+            detailsLines.forEach((line, index) => {
+                const y = startY + (index * lineHeight);
+                context.strokeText(line, centerX, y);
+                context.fillText(line, centerX, y);
+            });
+
+            // Indicador de slide atual
+            const indicatorY = centerY + 200;
+            context.font = `bold 24px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 4;
+            const slideText = `${currentHeatingSlide + 1} / ${heatingSlides.length}`;
+            context.strokeText(slideText, centerX, indicatorY);
+            context.fillText(slideText, centerX, indicatorY);
+
+            // Instruções de navegação
+            const navY = centerY + 250;
+            context.font = `bold 22px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 3;
+            const navText = "← → Navegar | Espaço: Iniciar";
+            context.strokeText(navText, centerX, navY);
+            context.fillText(navText, centerX, navY);
+
+            // Criar textura do canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            // Criar material com a textura
+            const textMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+
+            // Criar geometria do plano
+            const textGeometry = new THREE.PlaneGeometry(1.5, 1.5);
+
+            // Criar mesh do texto
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(heatingData.position.x, heatingData.position.y, heatingData.position.z);
+
+            // Sempre olhar para a câmera
+            textMesh.lookAt(camera.position);
+
+            // Criar grupo para o balão completo (sem esfera de fundo)
+            const balloonGroup = new THREE.Group();
+            balloonGroup.add(textMesh);
+            balloonGroup.visible = textBalloonsVisible; // Respeitar configuração de visibilidade
+
+            // Adicionar à cena
+            scene.add(balloonGroup);
+
+            // Armazenar referência para animação
+            const balloonData = {
+                group: balloonGroup,
+                text: textMesh,
+                balloon: null, // Sem esfera de fundo
+                originalY: heatingData.position.y,
+                index: 0,
+                canvas: canvas,
+                texture: texture,
+                isHeatingSlide: true
+            };
+
+            window.floatingTextBalloons.push(balloonData);
+        }
+
+        function createProcessBalloon(stageData, index) {
+            // Criar canvas para renderizar o texto
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            
+            // Configurar tamanho do canvas (otimizado)
+            const canvasSize = 512;
+            canvas.width = canvasSize;
+            canvas.height = canvasSize;
+            
+            // Configurar fonte (otimizada para tamanho menor)
+            const titleFontSize = 32;
+            const descFontSize = 20;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            // Desenhar fundo do balão (transparente)
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            const balloonRadius = 200;
+
+            // Fundo transparente - apenas borda
+            // Não desenhar preenchimento, apenas borda
+            
+            // Borda do balão mais espessa e colorida
+            const borderColor = `#${stageData.color.toString(16).padStart(6, '0')}`;
+            context.strokeStyle = stageData.active ? borderColor : 'rgba(128, 128, 128, 0.6)';
+            context.lineWidth = stageData.active ? 12 : 6;
+            context.stroke();
+            
+            // Sombra externa para destaque
+            if (stageData.active) {
+                context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                context.shadowBlur = 5;
+                context.shadowOffsetX = 5;
+                context.shadowOffsetY = 5;
+                context.strokeStyle = borderColor;
+                context.lineWidth = 12;
+                context.stroke();
+                context.shadowColor = 'transparent';
+                context.shadowBlur = 0;
+                context.shadowOffsetX = 0;
+                context.shadowOffsetY = 0;
+            }
+            
+            // Desenhar título com efeito de brilho
+            context.font = `bold ${titleFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 6;
+            
+            const titleY = centerY - 25;
+            context.strokeText(stageData.title, centerX, titleY);
+            context.fillText(stageData.title, centerX, titleY);
+            
+            // Efeito de brilho no texto ativo
+            if (stageData.active) {
+                context.shadowColor = borderColor;
+                context.shadowBlur = 15;
+                context.fillStyle = borderColor;
+                context.fillText(stageData.title, centerX, titleY);
+                context.shadowColor = 'transparent';
+                context.shadowBlur = 0;
+            }
+            
+            // Desenhar descrição
+            context.font = `bold ${descFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 4;
+            
+            const descY = centerY + 20;
+            context.strokeText(stageData.description, centerX, descY);
+            context.fillText(stageData.description, centerX, descY);
+            
+            // Indicador de progresso se ativo
+            if (stageData.active) {
+                const progressBarWidth = 300;
+                const progressBarHeight = 12;
+                const progressBarX = centerX - progressBarWidth / 2;
+                const progressBarY = centerY + 50;
+                
+                // Fundo da barra com borda
+                context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                context.fillRect(progressBarX - 4, progressBarY - 4, progressBarWidth + 8, progressBarHeight + 8);
+                
+                context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                context.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
+                
+                // Barra de progresso com gradiente
+                const progress = getProcessProgress(stageData.id);
+                const gradientBar = context.createLinearGradient(progressBarX, 0, progressBarX + progressBarWidth, 0);
+                gradientBar.addColorStop(0, borderColor);
+                gradientBar.addColorStop(1, 'rgba(255, 255, 255, 0.8)');
+                context.fillStyle = gradientBar;
+                context.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight);
+                
+                // Texto de progresso
+                context.font = `bold 22px Arial, sans-serif`;
+                context.fillStyle = 'rgba(255, 255, 255, 1)';
+                context.strokeStyle = 'rgba(0, 0, 0, 1)';
+                context.lineWidth = 4;
+                const progressText = `${Math.round(progress * 100)}%`;
+                context.strokeText(progressText, centerX, progressBarY + 50);
+                context.fillText(progressText, centerX, progressBarY + 50);
+            }
+            
+            // Criar textura do canvas
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            
+            // Criar material com a textura
+            const textMaterial = new THREE.MeshBasicMaterial({
+                map: texture,
+                transparent: true,
+                alphaTest: 0.1,
+                side: THREE.DoubleSide
+            });
+            
+            // Criar geometria do plano
+            const textGeometry = new THREE.PlaneGeometry(1.0, 1.0);
+            
+            // Criar mesh do texto
+            const textMesh = new THREE.Mesh(textGeometry, textMaterial);
+            textMesh.position.set(stageData.position.x, stageData.position.y, stageData.position.z);
+            
+            // Sempre olhar para a câmera
+            textMesh.lookAt(camera.position);
+            
+            // Criar grupo para o balão completo (sem esfera de fundo)
+            const balloonGroup = new THREE.Group();
+            balloonGroup.add(textMesh);
+            
+            // Adicionar à cena
+            scene.add(balloonGroup);
+            
+            // Armazenar referência para animação
+            const balloonData = {
+                group: balloonGroup,
+                text: textMesh,
+                balloon: null, // Sem esfera de fundo
+                originalY: stageData.position.y,
+                index: index,
+                canvas: canvas,
+                texture: texture,
+                stageData: stageData,
+                isActive: stageData.active
+            };
+            
+            window.floatingTextBalloons.push(balloonData);
+            window.processBalloons.activeBalloons.push(balloonData);
+        }
+
+        function getProcessProgress(stageId) {
+            switch(stageId) {
+                case 'preparation':
+                    return isHeating ? 1.0 : 0.0;
+                case 'heating':
+                    if (!isHeating) return 0.0;
+                    return Math.min(1.0, (temperature - 25) / 95); // 25°C a 120°C
+                case 'vaporization':
+                    if (temperature < 78) return 0.0;
+                    return Math.min(1.0, (temperature - 78) / 22); // 78°C a 100°C
+                case 'condensation':
+                    if (temperature < 78) return 0.0;
+                    return Math.min(1.0, (temperature - 78) / 22); // Mesmo que vaporização
+                case 'collection':
+                    return Math.min(1.0, volumeCollected / 100); // 0 a 100 mL
+                default:
+                    return 0.0;
+            }
+        }
+
+        function updateProcessBalloons() {
+            if (!window.processBalloons) return;
+
+            // Determinar estágio atual baseado no estado do experimento
+            let currentStage = 0;
+            if (isHeating) {
+                if (temperature < 78) {
+                    currentStage = 1; // Aquecimento
+                } else if (temperature < 100) {
+                    currentStage = 2; // Vaporização
+                } else {
+                    currentStage = 3; // Condensação
+                }
+            }
+            if (volumeCollected > 0) {
+                currentStage = 4; // Coleta
+            }
+
+            // Atualizar estágios ativos
+            window.processBalloons.stageData.forEach((stage, index) => {
+                const wasActive = stage.active;
+                stage.active = (index === currentStage);
+                
+                // Se mudou de estado, recriar o balão
+                if (wasActive !== stage.active) {
+                    // Remover balão antigo se existir
+                    const existingBalloon = window.processBalloons.activeBalloons.find(b => b.stageData.id === stage.id);
+                    if (existingBalloon) {
+                        scene.remove(existingBalloon.group);
+                        const balloonIndex = window.floatingTextBalloons.indexOf(existingBalloon);
+                        if (balloonIndex > -1) {
+                            window.floatingTextBalloons.splice(balloonIndex, 1);
+                        }
+                        const activeIndex = window.processBalloons.activeBalloons.indexOf(existingBalloon);
+                        if (activeIndex > -1) {
+                            window.processBalloons.activeBalloons.splice(activeIndex, 1);
+                        }
+                    }
+                    
+                    // Criar novo balão se ativo
+                    if (stage.active) {
+                        createProcessBalloon(stage, index);
+                    }
+                }
+            });
+
+            // Atualizar balões existentes
+            window.processBalloons.activeBalloons.forEach(balloon => {
+                updateBalloonContent(balloon);
+            });
+        }
+
+        function updateBalloonContent(balloon) {
+            const stageData = balloon.stageData;
+            const canvas = balloon.canvas;
+            const context = canvas.getContext('2d');
+            
+            // Limpar canvas
+            context.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Configurar fonte (aumentada para melhor legibilidade)
+            const titleFontSize = 48;
+            const descFontSize = 28;
+            context.textAlign = 'center';
+            context.textBaseline = 'middle';
+            
+            // Desenhar fundo do balão (transparente)
+            const centerX = canvas.width / 2;
+            const centerY = canvas.height / 2;
+            const balloonRadius = 400;
+            
+            // Fundo transparente - apenas borda
+            // Não desenhar preenchimento, apenas borda
+            
+            // Borda do balão mais espessa e colorida
+            const borderColor = `#${stageData.color.toString(16).padStart(6, '0')}`;
+            context.strokeStyle = stageData.active ? borderColor : 'rgba(128, 128, 128, 0.6)';
+            context.lineWidth = stageData.active ? 12 : 6;
+            context.stroke();
+            
+            // Sombra externa para destaque
+            if (stageData.active) {
+                context.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                context.shadowBlur = 20;
+                context.shadowOffsetX = 5;
+                context.shadowOffsetY = 5;
+                context.strokeStyle = borderColor;
+                context.lineWidth = 12;
+                context.stroke();
+                context.shadowColor = 'transparent';
+                context.shadowBlur = 0;
+                context.shadowOffsetX = 0;
+                context.shadowOffsetY = 0;
+            }
+            
+            // Desenhar título com efeito de brilho
+            context.font = `bold ${titleFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 6;
+            
+            const titleY = centerY - 25;
+            context.strokeText(stageData.title, centerX, titleY);
+            context.fillText(stageData.title, centerX, titleY);
+            
+            // Efeito de brilho no texto ativo
+            if (stageData.active) {
+                context.shadowColor = borderColor;
+                context.shadowBlur = 15;
+                context.fillStyle = borderColor;
+                context.fillText(stageData.title, centerX, titleY);
+                context.shadowColor = 'transparent';
+                context.shadowBlur = 0;
+            }
+            
+            // Desenhar descrição
+            context.font = `bold ${descFontSize}px Arial, sans-serif`;
+            context.fillStyle = 'rgba(255, 255, 255, 1)';
+            context.strokeStyle = 'rgba(0, 0, 0, 1)';
+            context.lineWidth = 4;
+            
+            const descY = centerY + 20;
+            context.strokeText(stageData.description, centerX, descY);
+            context.fillText(stageData.description, centerX, descY);
+            
+            // Indicador de progresso se ativo
+            if (stageData.active) {
+                const progressBarWidth = 300;
+                const progressBarHeight = 12;
+                const progressBarX = centerX - progressBarWidth / 2;
+                const progressBarY = centerY + 50;
+                
+                // Fundo da barra com borda
+                context.fillStyle = 'rgba(0, 0, 0, 0.6)';
+                context.fillRect(progressBarX - 4, progressBarY - 4, progressBarWidth + 8, progressBarHeight + 8);
+                
+                context.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                context.fillRect(progressBarX, progressBarY, progressBarWidth, progressBarHeight);
+                
+                // Barra de progresso com gradiente
+                const progress = getProcessProgress(stageData.id);
+                const gradientBar = context.createLinearGradient(progressBarX, 0, progressBarX + progressBarWidth, 0);
+                gradientBar.addColorStop(0, borderColor);
+                gradientBar.addColorStop(1, 'rgba(255, 255, 255, 0.8)');
+                context.fillStyle = gradientBar;
+                context.fillRect(progressBarX, progressBarY, progressBarWidth * progress, progressBarHeight);
+                
+                // Texto de progresso
+                context.font = `bold 22px Arial, sans-serif`;
+                context.fillStyle = 'rgba(255, 255, 255, 1)';
+                context.strokeStyle = 'rgba(0, 0, 0, 1)';
+                context.lineWidth = 4;
+                const progressText = `${Math.round(progress * 100)}%`;
+                context.strokeText(progressText, centerX, progressBarY + 50);
+                context.fillText(progressText, centerX, progressBarY + 50);
+            }
+            
+            // Atualizar textura
+            balloon.texture.needsUpdate = true;
         }
 
         function createLabSink() {
@@ -1001,6 +1804,7 @@
             inletConnection.position.set(0.8, 2.3, -0.18); // Movido 0.1 para centro e 0.38 para trás
             inletConnection.rotation.x = Math.PI / 2;
             scene.add(inletConnection);
+            distillationSetup.inletConnection = inletConnection;
 
             // Conexão de saída (condensador)
             const outletConnection = new THREE.Mesh(
@@ -1010,6 +1814,7 @@
             outletConnection.position.set(-0.8, 2.3, -0.18); // Movido 0.1 para centro e 0.38 para trás
             outletConnection.rotation.x = Math.PI / 2;
             scene.add(outletConnection);
+            distillationSetup.outletConnection = outletConnection;
 
             // Grampos de fixação das mangueiras
             // Grampo da mangueira de entrada
@@ -1020,6 +1825,7 @@
             clamp1.position.set(0.8, 2.3, -0.18); // Movido 0.1 para centro e 0.38 para trás
             clamp1.rotation.x = Math.PI / 2;
             scene.add(clamp1);
+            distillationSetup.clamp1 = clamp1;
 
             // Grampo da mangueira de saída
             const clamp2 = new THREE.Mesh(
@@ -1029,6 +1835,7 @@
             clamp2.position.set(-0.8, 2.3, -0.18); // Movido 0.1 para centro e 0.38 para trás
             clamp2.rotation.x = Math.PI / 2;
             scene.add(clamp2);
+            distillationSetup.clamp2 = clamp2;
 
             // Suportes de ancoragem das mangueiras
             // Suporte da mangueira de entrada (meio do caminho)
@@ -1170,7 +1977,7 @@
             };
 
 
-            // REMOVIDO: Coluna de fracionamento (não presente na imagem - é destilação simples)
+            //  Coluna de fracionamento (não presente é destilação simples)
 
             // 2. TERMÔMETRO MELHORADO - mais alto e funcional
             const thermometerGroup = new THREE.Group();
@@ -1437,8 +2244,8 @@
             // waterOutlet.position.set(-0.9, 2.3, 0.05); // Saída da camisa externa (esquerda, movido 0.1 para trás)
             // scene.add(waterOutlet);
 
-            // Mangueiras de água com física de corda e aparência transparente
-            const hoseMaterial = new THREE.MeshPhysicalMaterial({ 
+            // Material global das mangueiras (usado em entrada e saída)
+            globalHoseMaterial = new THREE.MeshPhysicalMaterial({ 
                 color: 0x4a90e2,
                 transparent: true,
                 opacity: 0.4,
@@ -1447,6 +2254,7 @@
                 transmission: 0.3,
                 thickness: 0.1
             });
+            const hoseMaterial = globalHoseMaterial;
             
             // Mangueira de entrada - conecta da torneira ao condensador (ENTRADA NA CAMISA EXTERNA)
             const hose1Curve = new THREE.QuadraticBezierCurve3(
@@ -1459,6 +2267,7 @@
                 hoseMaterial
             );
             scene.add(hose1);
+            distillationSetup.inletHose = hose1;
 
             // Mangueira de saída - conecta do condensador para dentro da pia (SAÍDA DA CAMISA EXTERNA)
             const hose2Curve = new THREE.QuadraticBezierCurve3(
@@ -1471,6 +2280,7 @@
                 hoseMaterial
             );
             scene.add(hose2);
+            distillationSetup.outletHose = hose2;
 
             // Adicionar detalhes das mangueiras (conexões e grampos)
             createHoseDetails();
@@ -1484,6 +2294,7 @@
             alonga.position.set(1.32, 2.05, 0); // Posição central entre condensador e erlenmeyer (inclinada para baixo em 0.05)
             alonga.rotation.z = Math.PI / 4 + 0.3; // Ângulo para conectar condensador ao erlenmeyer
             scene.add(alonga);
+            distillationSetup.alonga = alonga; // Armazenar referência da alonga
 
             // 8. ERLENMEYER COLETOR (150mL) - REDUZIDO
             const erlenmeyerGroup = new THREE.Group();
@@ -1559,15 +2370,14 @@
             }
 
             
-            // Texto "150mL" na etiqueta - removido o círculo preto
 
             
 
             // Sistema de líquido coletado - será criado dinamicamente
             distillationSetup.collected = null;
 
-            // Superfície do líquido (menisco) - removido o círculo preto
-            distillationSetup.meniscus = null; // Removido o menisco separado
+            // Superfície do líquido (menisco) - 
+            distillationSetup.meniscus = null; //  o menisco separado
 
             // 9. MANTA DE AQUECIMENTO - Cilindro oco com diâmetro aumentado
             // Cilindro externo da manta (maior diâmetro)
@@ -1620,12 +2430,12 @@
 
             // 7. SUPORTES UNIVERSAIS - ajustados para nova configuração
             createUniversalSupport(-1.6, 1.05, -0.6); // Suporte do balão
-            createUniversalSupport(0, 1.05, -0.5);    // Suporte do condensador (movido 0.1 para trás)
+            distillationSetup.condenserSupportScrew = createUniversalSupport(0, 1.05, -0.5); // Suporte do condensador (movido 0.1 para trás)
             createUniversalSupport(1.8, 1.05, -0.5);  // Suporte do coletor
 
             // Garras/pinças de suporte - ajustadas para novas posições
             createClamp(-1.6, 2.12, -0.60, distillationSetup.balloon); // Garra do balão mais próxima
-            createClamp(0, 2.12, -0.48, distillationSetup.condenser); // Garra do condensador (esticada 0.2 e baixada 0.2)
+            distillationSetup.condenserClamp = createClamp(0, 2.12, -0.48, distillationSetup.condenser); // Garra do condensador (esticada 0.2 e baixada 0.2)
         }
 
         function createUniversalSupport(x, y, z) {
@@ -1659,6 +2469,9 @@
             );
             screw.position.set(x, y + 1.075, z);
             scene.add(screw);
+            
+            // Retornar o parafuso para permitir ajustes dinâmicos
+            return screw;
         }
 
         function createBallCondenser() {
@@ -1705,26 +2518,11 @@
                 ballCondenserGroup.add(tube);
             }
             
-            // Elos nas extremidades (sem bolas)
-            // Elo da extremidade esquerda
-            const leftEndTubeGeometry = new THREE.CylinderGeometry(0.02, 0.02, ballSpacing * 0.5, 8);
-            const leftEndTube = new THREE.Mesh(leftEndTubeGeometry, glassMaterial);
-            leftEndTube.position.set(0.0, 0.5 * ballSpacing, 0); // Posição antes da primeira bola, movido 0.05 para a direita
-            leftEndTube.castShadow = true;
-            leftEndTube.receiveShadow = true;
-            ballCondenserGroup.add(leftEndTube);
             
-            // Elo da extremidade direita
-            const rightEndTubeGeometry = new THREE.CylinderGeometry(0.02, 0.02, ballSpacing * 0.5, 8);
-            const rightEndTube = new THREE.Mesh(rightEndTubeGeometry, glassMaterial);
-            rightEndTube.position.set(0.0, (ballCount - 0.5) * ballSpacing, 0); // Posição após a última bola, movido 0.05 para a direita
-            rightEndTube.castShadow = true;
-            rightEndTube.receiveShadow = true;
-            ballCondenserGroup.add(rightEndTube);
             
             // Posicionar o condensador de bolas (horizontal)
-            ballCondenserGroup.position.set(0.97, 2.3, 0);
-            ballCondenserGroup.rotation.z = Math.PI / 2; // Rotacionar 90° para ficar horizontal
+            ballCondenserGroup.position.set(0.97, 2.19, 0);
+            ballCondenserGroup.rotation.z = Math.PI / 2.08; // Rotacionar 90° para ficar horizontal
             ballCondenserGroup.castShadow = true;
             ballCondenserGroup.receiveShadow = true;
             
@@ -1738,8 +2536,8 @@
                 roughness: 0.05
             });
             const jacket = new THREE.Mesh(jacketGeometry, jacketMaterial);
-            jacket.position.set(0, 2.3, 0); // Posição alinhada com o condensador de bolas
-            jacket.rotation.z = Math.PI / 2;
+            jacket.position.set(0, 2.24, 0); // Posição alinhada com o condensador de bolas
+            jacket.rotation.z = Math.PI / 2.08;
             jacket.castShadow = false; // Desabilitar sombras
             jacket.receiveShadow = false;
             jacket.renderOrder = 2; // Renderizar depois do vapor para melhor visibilidade
@@ -1764,6 +2562,9 @@
                 roughness: 0.2
             });
 
+            // Criar grupo para a garra completa
+            const clampGroup = new THREE.Group();
+
             // Braço principal - mais robusto
             const arm = new THREE.Mesh(
                 new THREE.BoxGeometry(0.4, 0.05, 0.05),
@@ -1771,7 +2572,7 @@
             );
             arm.position.set(x, y, z + 0.2);
             arm.rotation.y = Math.PI / 2;
-            scene.add(arm);
+            clampGroup.add(arm);
 
             // Base da garra - mais detalhada
             const base = new THREE.Mesh(
@@ -1779,7 +2580,7 @@
                 clampMaterial
             );
             base.position.set(x, y, z + 0.4);
-            scene.add(base);
+            clampGroup.add(base);
 
             // Mecanismo de articulação
             const joint = new THREE.Mesh(
@@ -1788,7 +2589,7 @@
             );
             joint.position.set(x, y, z + 0.4);
             joint.rotation.x = Math.PI / 2;
-            scene.add(joint);
+            clampGroup.add(joint);
 
             // Pinças principais - melhoradas
             const jaw1 = new THREE.Mesh(
@@ -1798,7 +2599,7 @@
             jaw1.position.set(x + 0.10, y, z + 0.479);
             jaw1.rotation.y = Math.PI / 1.8;
             jaw1.rotation.x = 0;
-            scene.add(jaw1);
+            clampGroup.add(jaw1);
 
             const jaw2 = new THREE.Mesh(
                 new THREE.BoxGeometry(0.19, 0.04, 0.04),
@@ -1807,7 +2608,7 @@
             jaw2.position.set(x - 0.105, y, z + 0.479);
             jaw2.rotation.y = Math.PI / 2.5;
             jaw2.rotation.x = 0;
-            scene.add(jaw2);
+            clampGroup.add(jaw2);
 
             
         
@@ -1821,7 +2622,7 @@
             );
             screwHead.position.set(x + 0.06, y, z + 0.4);
             screwHead.rotation.z = Math.PI / 2;
-            scene.add(screwHead);
+            clampGroup.add(screwHead);
 
             // Parafuso secundário - para ajuste fino
             const fineScrew = new THREE.Mesh(
@@ -1830,7 +2631,7 @@
             );
             fineScrew.position.set(x - 0.05, y, z + 0.4);
             fineScrew.rotation.z = Math.PI / 2;
-            scene.add(fineScrew);
+            clampGroup.add(fineScrew);
 
             // Mola de retorno - visual
             const spring = new THREE.Mesh(
@@ -1843,7 +2644,13 @@
             );
             spring.position.set(x, y, z + 0.32);
             spring.rotation.z = Math.PI / 2;
-            scene.add(spring);
+            clampGroup.add(spring);
+
+            // Adicionar grupo à cena
+            scene.add(clampGroup);
+            
+            // Retornar o grupo da garra
+            return clampGroup;
         }
 
         function createAdditionalEquipment() {
@@ -2277,8 +3084,106 @@
             camera.quaternion.setFromEuler(euler);
         }
 
+        // Funções de navegação da apresentação
+        function nextSlide() {
+            if (presentationMode && currentSlide < presentationSlides.length - 1) {
+                currentSlide++;
+                updatePresentationBalloon();
+            } else if (heatingSlideMode && currentHeatingSlide < heatingSlides.length - 1) {
+                currentHeatingSlide++;
+                updateHeatingSlide();
+            }
+        }
+
+        function previousSlide() {
+            if (presentationMode && currentSlide > 0) {
+                currentSlide--;
+                updatePresentationBalloon();
+            } else if (heatingSlideMode && currentHeatingSlide > 0) {
+                currentHeatingSlide--;
+                updateHeatingSlide();
+            }
+        }
+
+        function startExperiment() {
+            if (presentationMode) {
+                presentationMode = false;
+                heatingSlideMode = true;
+                currentHeatingSlide = 0;
+                // Limpar balões de apresentação
+                window.floatingTextBalloons.forEach(balloon => {
+                    if (balloon.isPresentation) {
+                        scene.remove(balloon.group);
+                    }
+                });
+                window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isPresentation);
+                
+                // Criar slide explicativo sobre aquecimento
+                createHeatingExplanationSlide();
+            } else if (heatingSlideMode) {
+                heatingSlideMode = false;
+                // Limpar slides de aquecimento
+                window.floatingTextBalloons.forEach(balloon => {
+                    if (balloon.isHeatingSlide) {
+                        scene.remove(balloon.group);
+                    }
+                });
+                window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeatingSlide);
+                
+                // Criar balões do processo
+                createProcessBalloon(window.processBalloons.stageData[0], 0);
+            }
+        }
+
+        function updatePresentationBalloon() {
+            // Remover balão atual
+            window.floatingTextBalloons.forEach(balloon => {
+                if (balloon.isPresentation) {
+                    scene.remove(balloon.group);
+                }
+            });
+            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isPresentation);
+            
+            // Criar novo balão com slide atual
+            createPresentationBalloon();
+        }
+
+        function updateHeatingSlide() {
+            // Remover balão atual
+            window.floatingTextBalloons.forEach(balloon => {
+                if (balloon.isHeatingSlide) {
+                    scene.remove(balloon.group);
+                }
+            });
+            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeatingSlide);
+            
+            // Criar novo balão com slide atual
+            createHeatingExplanationSlide();
+        }
+
         function setupKeyboardControls() {
             document.addEventListener('keydown', (e) => {
+                // Controles de apresentação e slides de aquecimento
+                if (presentationMode || heatingSlideMode) {
+                    switch(e.code) {
+                        case 'ArrowRight':
+                        case 'ArrowDown':
+                            e.preventDefault();
+                            nextSlide();
+                            return;
+                        case 'ArrowLeft':
+                        case 'ArrowUp':
+                            e.preventDefault();
+                            previousSlide();
+                            return;
+                        case 'Space':
+                            e.preventDefault();
+                            startExperiment();
+                            return;
+                    }
+                }
+                
+                // Controles normais do jogo
                 switch(e.code) {
                     case 'KeyW': moveForward = true; break;
                     case 'KeyS': moveBackward = true; break;
@@ -2320,6 +3225,9 @@
                         break;
                     case 'KeyH': 
                         toggleInfoPanel(); 
+                        break;
+                    case 'KeyL': 
+                        toggleTextBalloons(); 
                         break;
                 }
             });
@@ -2792,6 +3700,160 @@
             }
         }
 
+        function toggleTextBalloons() {
+            textBalloonsVisible = !textBalloonsVisible;
+            
+            if (window.floatingTextBalloons) {
+                window.floatingTextBalloons.forEach(balloon => {
+                    if (balloon.group) {
+                        balloon.group.visible = textBalloonsVisible;
+                    }
+                });
+            }
+            
+            // Atualizar status no painel de informações
+            const statusElement = document.getElementById('process-status');
+            if (statusElement) {
+                if (textBalloonsVisible) {
+                    statusElement.textContent = 'Status: Balões de texto ativados (L para desativar)';
+                } else {
+                    statusElement.textContent = 'Status: Balões de texto desativados (L para ativar)';
+                }
+            }
+        }
+
+        function updateInletHose(yPosition) {
+            // Recriar mangueira de entrada com nova posição Y
+            if (distillationSetup.inletHose) {
+                // Remover mangueira antiga
+                scene.remove(distillationSetup.inletHose);
+            }
+            
+            // Criar nova mangueira com posição ajustada
+            const hose1Curve = new THREE.QuadraticBezierCurve3(
+                new THREE.Vector3(0.1, 1.275, -2.6), // Conexão na torneira (início)
+                new THREE.Vector3(0.4, 1, -0.8), // Ponto de inflexão (gravidade) - ajustado para nova trajetória
+                new THREE.Vector3(0.8, yPosition, -0.18)  // Entrada na camisa externa do condensador (posição Y ajustada)
+            );
+            
+            // Usar o material global das mangueiras (mesmo da mangueira de saída)
+            const hoseMaterial = globalHoseMaterial;
+            
+            const newHose = new THREE.Mesh(
+                new THREE.TubeGeometry(hose1Curve, 20, 0.03, 8),
+                hoseMaterial
+            );
+            scene.add(newHose);
+            distillationSetup.inletHose = newHose;
+        }
+
+        function updateWaterConnectionsForBallCondenser() {
+            // Ajustar apenas a conexão de entrada para o condensador de bolas (inclinado)
+            // O condensador de bolas está em: position.set(0.97, 2.3, 0) com inclinação
+            
+            if (distillationSetup.inletConnection) {
+                distillationSetup.inletConnection.position.set(0.8, 2.19, -0.18);
+            }
+            if (distillationSetup.clamp1) {
+                distillationSetup.clamp1.position.set(0.8, 2.19, -0.18);
+            }
+            
+            // Ajustar inclinação da garra do condensador
+            if (distillationSetup.condenserClamp) {
+                distillationSetup.condenserClamp.rotation.z = -0.1; // Inclinação para acompanhar o condensador de bolas
+                distillationSetup.condenserClamp.position.x = -0.21; // Mover para esquerda
+                distillationSetup.condenserClamp.position.y = -0.041; // Baixar 0.04 unidades (de 2.12 para 2.08)
+            }
+            
+            // Ajustar parafuso do suporte para baixar junto com a garra
+            if (distillationSetup.condenserSupportScrew) {
+                distillationSetup.condenserSupportScrew.position.y = 2.071; // Baixar 0.041 unidades (de 2.075 para 2.034)
+            }
+            
+            // Ajustar alonga para acompanhar a inclinação do condensador de bolas
+            if (distillationSetup.alonga) {
+                distillationSetup.alonga.position.y = 1.99; // Baixar 0.11 unidades (de 2.05 para 1.94)
+                distillationSetup.alonga.rotation.z = Math.PI / 4 + 0.4; // Aumentar inclinação para acompanhar condensador de bolas
+            }
+            
+            // Atualizar posição Y da água no condensador
+            condenserWaterY = 2.19;
+            
+            // Atualizar posição Y de saída das gotas
+            dropExitY = 2.19;
+            
+            // Atualizar posição Y do vapor no condensador
+            vaporCondenserY = 2.25;
+            
+            // Atualizar inclinação do vapor dentro do condensador de bolas
+            vaporCondenserInclination = -0.05; // Inclinação para acompanhar condensador de bolas
+            
+            // Ajustar posição de saída do condensador para o final da última bola
+            condenserEndX = 0.7; // Vapor desaparece ao final da última bola da direita
+            
+            // Atualizar posições da alonga para gotas
+            alongaStartY = 2.19; // Início da alonga (mesma altura do condensador)
+            alongaEndY = 1.74; // Fim da alonga (ajustado para nova inclinação)
+            
+            // Recriar mangueira de entrada com nova posição
+            updateInletHose(2.19);
+            
+            // Manter conexão de saída na posição original
+        }
+
+        function updateWaterConnectionsForStandardCondenser() {
+            // Restaurar apenas a conexão de entrada para o condensador padrão
+            
+            if (distillationSetup.inletConnection) {
+                distillationSetup.inletConnection.position.set(0.8, 2.3, -0.18);
+            }
+            if (distillationSetup.clamp1) {
+                distillationSetup.clamp1.position.set(0.8, 2.3, -0.18);
+            }
+            
+            // Restaurar inclinação da garra do condensador
+            if (distillationSetup.condenserClamp) {
+                distillationSetup.condenserClamp.rotation.z = 0; // Sem inclinação para condensador padrão
+                distillationSetup.condenserClamp.position.x = 0; // Restaurar posição original (centro)
+                distillationSetup.condenserClamp.position.y = 0; // Restaurar altura original
+            }
+            
+            // Restaurar parafuso do suporte para posição original
+            if (distillationSetup.condenserSupportScrew) {
+                distillationSetup.condenserSupportScrew.position.y = 2.125; // Restaurar posição original
+            }
+            
+            // Restaurar alonga para posição original
+            if (distillationSetup.alonga) {
+                distillationSetup.alonga.position.y = 2.05; // Restaurar posição original
+                distillationSetup.alonga.rotation.z = Math.PI / 4 + 0.3; // Restaurar inclinação original
+            }
+            
+            // Restaurar posição Y da água no condensador
+            condenserWaterY = 2.3;
+            
+            // Restaurar posição Y de saída das gotas
+            dropExitY = 2.3;
+            
+            // Restaurar posição Y do vapor no condensador
+            vaporCondenserY = 2.3;
+            
+            // Restaurar inclinação do vapor dentro do condensador padrão
+            vaporCondenserInclination = 0; // Sem inclinação para condensador padrão
+            
+            // Restaurar posição de saída do condensador padrão
+            condenserEndX = 0.9; // Posição original de saída
+            
+            // Restaurar posições da alonga para gotas
+            alongaStartY = 2.3; // Início da alonga (posição original)
+            alongaEndY = 1.8; // Fim da alonga (posição original)
+            
+            // Recriar mangueira de entrada com posição original
+            updateInletHose(2.3);
+            
+            // Manter conexão de saída na posição original (não alterar)
+        }
+
         function toggleCondenserType() {
             // Alternar tipo de condensador
             isBallCondenser = !isBallCondenser;
@@ -2815,6 +3877,9 @@
                 distillationSetup.condenserJacket = ballCondenserData.jacket;
                 scene.add(distillationSetup.condenser);
                 scene.add(distillationSetup.condenserJacket);
+                
+                // Ajustar posições das conexões de água para condensador de bolas
+                updateWaterConnectionsForBallCondenser();
                 console.log("Condensador alterado para: Condensador de Bolas");
             } else {
                 // Condensador padrão (Liebig horizontal)
@@ -2839,6 +3904,9 @@
                 distillationSetup.condenser.rotation.z = Math.PI / 2;
                 distillationSetup.condenser.castShadow = true;
                 scene.add(distillationSetup.condenser);
+                
+                // Restaurar posições originais das conexões de água
+                updateWaterConnectionsForStandardCondenser();
                 
                 // Criar camisa externa (jacket) - com efeito de água fluindo
                 const jacketGeometry = new THREE.CylinderGeometry(0.15, 0.15, condenserLength, 32);
@@ -2881,7 +3949,7 @@
             waterShutdownProgress = 0;
             heaterShutdownProgress = 0;
             heaterRestartProgress = 0;
-            // Cilindro da água removido
+            // Cilindro da água 
             distillationSetup.heater.material.emissive.setHex(0x000000);
             distillationSetup.heatingCoil.material.emissive.setHex(0x000000);
             distillationSetup.thermometerBulb.material.emissive.setHex(0xff0000);
@@ -3286,7 +4354,7 @@
                     
                     // Definir posições do condensador
                     const condenserStart = -0.9; // Entrada do condensador
-                    const condenserEnd = 0.9;    // Saída do condensador
+                    const condenserEnd = condenserEndX;    // Saída do condensador (ajustável)
                     const condenserLength = condenserEnd - condenserStart;
                     
                     if (userData.stage === 'baloon_to_neck') {
@@ -3344,7 +4412,8 @@
                         if (progress <= 1.0) {
                             // Interpolar posição dentro do tubo interno do condensador
                             particle.position.x = condenserStart + (progress * condenserLength);
-                            particle.position.y = 2.3; // Altura fixa do condensador
+                            // Aplicar inclinação do vapor baseada na posição X
+                            particle.position.y = vaporCondenserY + (particle.position.x * vaporCondenserInclination);
                             particle.position.z = 0; // Centro do tubo interno
                             
                             // Reduzir opacidade gradualmente (condensação)
@@ -3433,7 +4502,7 @@
                         const hose1Curve = new THREE.QuadraticBezierCurve3(
                             new THREE.Vector3(0.1, 1.275, -2.6), // Conexão na torneira (início)
                             new THREE.Vector3(0.4, 1, -0.8), // Ponto de inflexão (gravidade) - ajustado para nova trajetória
-                            new THREE.Vector3(0.8, 2.3, -0.18)  // Entrada na camisa externa do condensador (movido 0.1 para centro e 0.38 para trás)
+                            new THREE.Vector3(0.8, condenserWaterY, -0.18)  // Entrada na camisa externa do condensador (posição Y ajustável)
                         );
                         
                         if (userData.progress <= 1.0) {
@@ -3453,7 +4522,7 @@
                         if (userData.progress <= 1.0) {
                             // Movimento horizontal da direita para a esquerda através da camisa externa
                             particle.position.x = condenserStart - (userData.progress * condenserLength);
-                            particle.position.y = 2.3; // Altura fixa do condensador
+                            particle.position.y = condenserWaterY; // Altura ajustável do condensador
                             particle.position.z = -0.18; // Posição Z ajustada (movido 0.38 para trás)
                             
                             // Efeito visual: água fica mais azul no condensador (cor original)
@@ -3463,7 +4532,7 @@
                             const radius = 0.15; // Raio da camisa externa
                             const angle = userData.progress * Math.PI * 2; // Rotação completa
                             particle.position.z = Math.sin(angle) * radius;
-                            particle.position.y = 2.3 + Math.cos(angle) * 0.05; // Pequena variação vertical
+                            particle.position.y = condenserWaterY + Math.cos(angle) * 0.05; // Pequena variação vertical
                         } else {
                             userData.stage = 'hose2';
                             userData.progress = 0;
@@ -3520,8 +4589,8 @@
                     
                     if (userData.stage === 'condenser_exit') {
                         // Movimento direto da saída do condensador para a alonga (sem dobra em L)
-                        const condenserExit = new THREE.Vector3(0.8, 2.3, 0); // Saída do condensador (direto)
-                        const alongaEntry = new THREE.Vector3(0.8, 2.3, 0); // Início da alonga (mesma posição)
+                        const condenserExit = new THREE.Vector3(0.7, dropExitY, 0); // Saída do condensador (ajustável)
+                        const alongaEntry = new THREE.Vector3(0.9, alongaStartY, 0); // Início da alonga (ajustável)
                         
                         if (userData.progress <= 1.0) {
                             // Movimento direto (sem dobra em L)
@@ -3533,8 +4602,8 @@
                         
                     } else if (userData.stage === 'alonga') {
                         // Movimento através da alonga (tubo de conexão)
-                        const alongaStart = new THREE.Vector3(0.8, 2.3, 0); // Início da alonga (saída do condensador)
-                        const alongaEnd = new THREE.Vector3(1.8, 1.8, 0); // Fim da alonga (entrada no erlenmeyer)
+                        const alongaStart = new THREE.Vector3(0.8, alongaStartY, 0); // Início da alonga (ajustável)
+                        const alongaEnd = new THREE.Vector3(1.8, alongaEndY, 0); // Fim da alonga (ajustável)
                         
                         if (userData.progress <= 1.0) {
                             // Interpolar posição através da alonga
@@ -3868,7 +4937,7 @@
             // Gotas saem da saída do condensador
             drop.position.set(
                 0.9 + (Math.random() - 0.5) * 0.05, // Saída do condensador
-                2.3 - Math.random() * 0.1,         // Altura da saída
+                dropExitY - Math.random() * 0.1,   // Altura da saída (ajustável)
                 (Math.random() - 0.5) * 0.05       // Pequena variação lateral
             );
             
@@ -4123,12 +5192,46 @@
             prevTime = time;
         }
 
+        function animateFloatingTextBalloons() {
+            if (!window.floatingTextBalloons) return;
+
+            const time = Date.now() * 0.001; // Tempo em segundos
+
+            // Atualizar balões de processo (apenas se não estiver em modo apresentação)
+            if (!presentationMode) {
+                updateProcessBalloons();
+            }
+
+            window.floatingTextBalloons.forEach((balloon, index) => {
+                // Animação de flutuação vertical (muito reduzida)
+                const floatOffset = Math.sin(time * 0.5 + index * 0.5) * 0.02; // Muito reduzido
+                balloon.group.position.y = balloon.originalY + floatOffset;
+                
+                // Animação de escala pulsante (muito reduzida)
+                const baseScale = balloon.isActive ? 1.02 : 1.0; // Muito reduzido
+                const scalePulse = baseScale + Math.sin(time * 0.8 + index * 0.3) * 0.01; // Muito reduzido
+                balloon.group.scale.setScalar(scalePulse);
+                
+                // Fazer o texto sempre olhar para a câmera
+                balloon.text.lookAt(camera.position);
+                
+                // Efeito de "breathing" para balões ativos (muito reduzido)
+                if (balloon.isActive || balloon.isPresentation || balloon.isHeatingSlide) {
+                    const breatheScale = 1.0 + Math.sin(time * 0.8 + index * 0.8) * 0.01; // Muito reduzido
+                    balloon.text.scale.setScalar(breatheScale);
+                } else {
+                    balloon.text.scale.setScalar(1.0);
+                }
+            });
+        }
+
         function animate() {
             requestAnimationFrame(animate);
             if (isPointerLocked) {
                 updateMovement();
             }
             updateExperiment();
+            animateFloatingTextBalloons();
             renderer.render(scene, camera);
         }
 
