@@ -1327,7 +1327,7 @@
             context.textAlign = 'center';
             context.textBaseline = 'middle';
 
-            // Desenhar fundo do balão (preto semi-transparente)
+            // Desenhar fundo do balão (transparente)
             const centerX = canvasSize / 2;
             const centerY = canvasSize / 2;
             const balloonRadius = 400;
@@ -1645,16 +1645,13 @@
             context.textAlign = 'center';
             context.textBaseline = 'middle';
             
-            // Desenhar fundo do balão (preto semi-transparente)
+            // Desenhar fundo do balão (transparente)
             const centerX = canvasSize / 2;
             const centerY = canvasSize / 2;
             const balloonRadius = 200;
 
-            // Fundo preto semi-transparente para melhor visibilidade
-            context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            context.beginPath();
-            context.arc(centerX, centerY, balloonRadius, 0, Math.PI * 2);
-            context.fill();
+            // Fundo transparente - apenas borda
+            // Não desenhar preenchimento, apenas borda
             
             // Borda do balão mais espessa e colorida
             const borderColor = `#${stageData.color.toString(16).padStart(6, '0')}`;
@@ -1871,16 +1868,12 @@
             context.textAlign = 'center';
             context.textBaseline = 'middle';
             
-            // Desenhar fundo do balão (preto semi-transparente)
+            // Desenhar fundo do balão (transparente)
             const centerX = canvas.width / 2;
             const centerY = canvas.height / 2;
             const balloonRadius = 400;
             
-            // Fundo preto semi-transparente para melhor visibilidade
-            context.fillStyle = 'rgba(0, 0, 0, 0.7)';
-            context.beginPath();
-            context.arc(centerX, centerY, balloonRadius, 0, Math.PI * 2);
-            context.fill();
+            // Fundo transparente - apenas borda
             // Não desenhar preenchimento, apenas borda
             
             // Borda do balão mais espessa e colorida
@@ -3398,6 +3391,7 @@
                 updateHeatingSlide();
             } else if (heaterSlideMode && currentHeaterSlide < heaterSlides.length - 1) {
                 currentHeaterSlide++;
+                console.log('Próximo slide do aquecedor:', currentHeaterSlide);
                 updateHeaterSlide();
             }
         }
@@ -3411,6 +3405,7 @@
                 updateHeatingSlide();
             } else if (heaterSlideMode && currentHeaterSlide > 0) {
                 currentHeaterSlide--;
+                console.log('Slide anterior do aquecedor:', currentHeaterSlide);
                 updateHeaterSlide();
             }
         }
@@ -3472,6 +3467,8 @@
         }
 
         function updateHeaterSlide() {
+            console.log('Atualizando slide do aquecedor:', currentHeaterSlide);
+            
             // Remover balão atual
             window.floatingTextBalloons.forEach(balloon => {
                 if (balloon.isHeaterSlide) {
@@ -3488,15 +3485,18 @@
             document.addEventListener('keydown', (e) => {
                 // Controles de apresentação, slides de aquecimento e slides da manta aquecedora
                 if (presentationMode || heatingSlideMode || heaterSlideMode) {
+                    console.log('Modo ativo:', { presentationMode, heatingSlideMode, heaterSlideMode });
                     switch(e.code) {
                         case 'ArrowRight':
                         case 'ArrowDown':
                             e.preventDefault();
+                            console.log('Seta direita/baixo pressionada');
                             nextSlide();
                             return;
                         case 'ArrowLeft':
                         case 'ArrowUp':
                             e.preventDefault();
+                            console.log('Seta esquerda/cima pressionada');
                             previousSlide();
                             return;
                         case 'Space':
@@ -3552,6 +3552,7 @@
                     case 'KeyH': 
                         if (heaterSlideMode) {
                             // Se já está no modo de slides da manta, voltar ao experimento
+                            console.log('Desativando slides do aquecedor');
                             heaterSlideMode = false;
                             currentHeaterSlide = 0;
                             
@@ -3566,6 +3567,7 @@
                             document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora desativados (H para ativar)';
                         } else {
                             // Ativar slides da manta aquecedora
+                            console.log('Ativando slides do aquecedor');
                             heaterSlideMode = true;
                             currentHeaterSlide = 0;
                             
