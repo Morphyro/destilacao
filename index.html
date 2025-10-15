@@ -318,7 +318,7 @@
         }
         #pointer-hint {
             position: absolute;
-            bottom: 20px;
+            top: 160px;
             left: 50%;
             transform: translateX(-50%);
             background: rgba(0, 0, 0, 0.8);
@@ -608,7 +608,7 @@
             {
                 title: "SIMULAÇÃO DE DESTILAÇÃO",
                 description: "Laboratório Virtual Interativo",
-                details: "Bem-vindo ao laboratório virtual de destilação simples!\n\nEsta simulação demonstra a destilação do etanol do vinho,\n\nseparando o álcool da água através de diferenças de\n\ntemperatura de ebulição em um ambiente 3D realista.",
+                details: "Bem-vindo ao laboratório virtual de destilação simples!\n\nEsta simulação demonstra a destilação do etanol do vinho,\n\nseparando o álcool da água através de diferenças de\n\ntemperatura de ebulição em um ambiente 3D.",
                 color: 0x4ecdc4
             },
             // {
@@ -815,7 +815,7 @@
 
             // Câmera com FOV maior para melhor visão e renderização completa
             camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.01, 2000);
-            camera.position.set(0, 3, 1.6);
+            camera.position.set(0, 3, 2.2);
 
              // Renderer
             renderer = new THREE.WebGLRenderer({ antialias: true });
@@ -851,9 +851,46 @@
             labLight2.position.set(-5, 5, -5);
             scene.add(labLight2);
 
-            // Chão do laboratório com textura
+            // Chão do laboratório com quadriculado
             const floorGeometry = new THREE.PlaneGeometry(40, 40);
+            
+            // Criar textura de quadriculado
+            const canvas = document.createElement('canvas');
+            canvas.width = 256;
+            canvas.height = 256;
+            const ctx = canvas.getContext('2d');
+            
+            // Fundo cinza escuro
+            ctx.fillStyle = '#34495e';
+            ctx.fillRect(0, 0, 256, 256);
+            
+            // Linhas do quadriculado
+            ctx.strokeStyle = '#2c3e50';
+            ctx.lineWidth = 1;
+            
+            // Linhas verticais
+            for (let i = 0; i <= 256; i += 16) {
+                ctx.beginPath();
+                ctx.moveTo(i, 0);
+                ctx.lineTo(i, 256);
+                ctx.stroke();
+            }
+            
+            // Linhas horizontais
+            for (let i = 0; i <= 256; i += 16) {
+                ctx.beginPath();
+                ctx.moveTo(0, i);
+                ctx.lineTo(256, i);
+                ctx.stroke();
+            }
+            
+            const gridTexture = new THREE.CanvasTexture(canvas);
+            gridTexture.wrapS = THREE.RepeatWrapping;
+            gridTexture.wrapT = THREE.RepeatWrapping;
+            gridTexture.repeat.set(8, 8);
+            
             const floorMaterial = new THREE.MeshStandardMaterial({ 
+                map: gridTexture,
                 color: 0x34495e,
                 roughness: 0.85,
                 metalness: 0.15
@@ -1238,7 +1275,7 @@
 
             // Criar mesh do texto
             const textMesh = new THREE.Mesh(textGeometry, textMaterial);
-            textMesh.position.set(0, 1.4, 1); // Posição mais baixa
+            textMesh.position.set(0, 1.4, 1.5); // Posição mais baixa e afastada da mesa
 
             // Sempre olhar para a câmera
             textMesh.lookAt(camera.position);
@@ -5554,12 +5591,12 @@
 
             window.floatingTextBalloons.forEach((balloon, index) => {
                 // Animação de flutuação vertical (muito reduzida)
-                const floatOffset = Math.sin(time * 0.5 + index * 0.5) * 0.02; // Muito reduzido
+                const floatOffset = Math.sin(time * 0.25 + index * 0.25) * 0.01; // Reduzido pela metade
                 balloon.group.position.y = balloon.originalY + floatOffset;
                 
                 // Animação de escala pulsante (muito reduzida)
-                const baseScale = balloon.isActive ? 1.02 : 1.0; // Muito reduzido
-                const scalePulse = baseScale + Math.sin(time * 0.8 + index * 0.3) * 0.01; // Muito reduzido
+                const baseScale = balloon.isActive ? 1.01 : 1.0; // Reduzido pela metade
+                const scalePulse = baseScale + Math.sin(time * 0.4 + index * 0.2) * 0.008; // Reduzido pela metade
                 balloon.group.scale.setScalar(scalePulse);
                 
                 // Fazer o texto sempre olhar para a câmera
