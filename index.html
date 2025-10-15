@@ -3608,6 +3608,20 @@
             isHeating = !isHeating;
             const btn = document.querySelector('button[onclick="toggleHeating()"]');
             
+            // Se estiver no modo de slides do aquecedor e ligar a manta, desligar o balão
+            if (isHeating && heaterSlideMode) {
+                heaterSlideMode = false;
+                currentHeaterSlide = 0;
+                
+                // Limpar balões da manta aquecedora
+                window.floatingTextBalloons.forEach(balloon => {
+                    if (balloon.isHeaterSlide) {
+                        scene.remove(balloon.group);
+                    }
+                });
+                window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeaterSlide);
+            }
+            
             if (isHeating) {
                 if (btn) {
                     btn.textContent = 'Desligar Aquecimento';
