@@ -681,7 +681,7 @@
             {
                 title: "PRONTO PARA COMEÇAR!",
                 description: "Vamos agachar até a manta aquecedora!",
-                details: "Precione C para agachar\n\n Pressione H para continuar",
+                details: "Pressione C para agachar\n\n Pressione ESPAÇO para continuar",
                 color: 0x00ff00,
                 position: { x: -2.3, y: 1.4, z: 0.7 }
             }
@@ -692,14 +692,14 @@
             {
                 title: "MANTA AQUECEDORA",
                 description: "Sistema de aquecimento controlado",
-                details: "A manta aquecedora é o coração do sistema de destilação.\n\nEla aquece gradualmente a mistura líquida no balão,\n\npermitindo a separação dos componentes por diferença\n\nde temperatura de ebulição.",
+                details: "A manta aquecedora é o coração do sistema de destilação.\n\nEla aquece gradualmente a mistura líquida no balão,\npermitindo a separação dos componentes por diferença\nde temperatura de ebulição.",
                 color: 0xff6b6b,
                 position: { x: -2.3, y: 0.87, z: 0.7 }
             },
             {
                 title: "CONTROLE DE TEMPERATURA",
                 description: "Monitoramento preciso do processo",
-                details: "O display digital mostra a temperatura em tempo real.\n\nO botão dimmer permite controlar a intensidade\n\ndo aquecimento (20% a 100%).\n\nO LED vermelho indica quando a manta está ativa.",
+                details: "O display digital mostra a temperatura em tempo real.\nO botão dimmer permite controlar a intensidade\ndo aquecimento (20% a 100%).\n\nO LED vermelho indica quando a manta está ativa.",
                 color: 0xffa500,
                 position: { x: -2.3, y: 0.87, z: 0.7 }
             },
@@ -1095,7 +1095,7 @@
                         id: 'preparation',
                         title: 'PREPARAÇÃO',
                         description: 'Ligue apertando a tecla 2',
-                        position: { x: -2.5, y: 1.5, z: 0.5 },
+                        position: { x: -2.5, y: 0.8, z: 0.5 },
                         color: 0x4ecdc4,
                         active: true
                     },
@@ -1108,10 +1108,18 @@
                         active: false
                     },
                     {
+                        id: 'vaporization-ethanol',
+                        title: 'VAPOR DE ETANOL',
+                        description: 'Etanol vaporiza primeiro',
+                        position: { x: -1.55, y: 1.1, z: 0.23 },
+                        color: 0xffa500,
+                        active: false
+                    },
+                    {
                         id: 'vaporization',
                         title: 'VAPORIZAÇÃO',
                         description: 'Líquido vira vapor',
-                        position: { x: -1.55, y: 1.1, z: 0.2 },
+                        position: { x: -1.55, y: 1.3, z: 0.23 },
                         color: 0xffa500,
                         active: false
                     },
@@ -1119,7 +1127,7 @@
                         id: 'condensation',
                         title: 'CONDENSAÇÃO',
                         description: 'Vapor vira líquido',
-                        position: { x: 0, y: 1.35, z: -0.3 },
+                        position: { x: 0, y: 1.35, z: -0.2 },
                         color: 0x4a90e2,
                         active: false
                     },
@@ -3426,17 +3434,49 @@
                 // Criar slide explicativo sobre aquecimento
                 createHeatingExplanationSlide();
             } else if (heatingSlideMode) {
-                heatingSlideMode = false;
-                // Limpar slides de aquecimento
-                window.floatingTextBalloons.forEach(balloon => {
-                    if (balloon.isHeatingSlide) {
-                        scene.remove(balloon.group);
-                    }
-                });
-                window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeatingSlide);
-                
-                // Criar balões do processo
-                createProcessBalloon(window.processBalloons.stageData[0], 0);
+                // Verificar se estamos no último slide de aquecimento
+                if (currentHeatingSlide === heatingSlides.length - 1) {
+                    // Ativar slides da manta aquecedora
+                    heatingSlideMode = false;
+                    heaterSlideMode = true;
+                    currentHeaterSlide = 0;
+                    
+                    // Limpar slides de aquecimento
+                    window.floatingTextBalloons.forEach(balloon => {
+                        if (balloon.isHeatingSlide) {
+                            scene.remove(balloon.group);
+                        }
+                    });
+                    window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeatingSlide);
+                    
+                    // Criar slide da manta aquecedora
+                    createHeaterExplanationSlide();
+                    document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora ativados (ESPAÇO para navegar)';
+                } else {
+                    // Continuar para o próximo slide de aquecimento
+                    nextSlide();
+                }
+            } else if (heaterSlideMode) {
+                // Se estiver no último slide da manta aquecedora, finalizar
+                if (currentHeaterSlide === heaterSlides.length - 1) {
+                    heaterSlideMode = false;
+                    currentHeaterSlide = 0;
+                    
+                    // Limpar slides da manta aquecedora
+                    window.floatingTextBalloons.forEach(balloon => {
+                        if (balloon.isHeaterSlide) {
+                            scene.remove(balloon.group);
+                        }
+                    });
+                    window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeaterSlide);
+                    
+                    // Criar balões do processo
+                    createProcessBalloon(window.processBalloons.stageData[0], 0);
+                    document.getElementById('process-status').textContent = 'Status: Experimento iniciado - Use WASD para mover, mouse para olhar';
+                } else {
+                    // Continuar para o próximo slide da manta aquecedora
+                    nextSlide();
+                }
             }
         }
 
@@ -3564,25 +3604,7 @@
                             });
                             window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isHeaterSlide);
                             
-                            document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora desativados (H para ativar)';
-                        } else {
-                            // Ativar slides da manta aquecedora
-                            console.log('Ativando slides do aquecedor');
-                            heaterSlideMode = true;
-                            currentHeaterSlide = 0;
-                            
-                            // Limpar outros balões se existirem
-                            window.floatingTextBalloons.forEach(balloon => {
-                                if (balloon.isPresentation || balloon.isHeatingSlide) {
-                                    scene.remove(balloon.group);
-                                }
-                            });
-                            window.floatingTextBalloons = window.floatingTextBalloons.filter(b => !b.isPresentation && !b.isHeatingSlide);
-                            
-                            // Criar primeiro slide da manta aquecedora
-                            createHeaterExplanationSlide();
-                            
-                            document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora ativados (H para desativar)';
+                            document.getElementById('process-status').textContent = 'Status: Slides da manta aquecedora desativados';
                         }
                         break;
                     case 'KeyL': 
